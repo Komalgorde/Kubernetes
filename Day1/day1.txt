@@ -1,0 +1,130 @@
+*Detailed Hands-on: Deployed Kubernetes Cluster Setup using KOPS (What I Did + About KOPS)*
+
+Today I deployed a Kubernetes cluster using KOPS on AWS and also understood how KOPS works internally. Sharing my exact steps 👇
+
+---
+
+## What is KOPS
+
+*KOPS (Kubernetes Operations)* is a tool used to create, manage, upgrade, and delete Kubernetes clusters on cloud (mainly AWS).
+
+- Automates cluster provisioning
+- Uses AWS resources like EC2, ASG, ELB
+- Stores cluster state in S3
+- Provides production-grade Kubernetes setup
+
+Key Point:
+KOPS uses *Auto Scaling Groups*, so if any node is deleted, it automatically recreates it.
+
+---
+
+## Step 1: Infrastructure Setup
+
+* Launched EC2 (t2.medium)
+* Created S3 bucket (for state storage)
+* Attached IAM Role (Admin access)
+* Configured DNS
+
+---
+
+## Step 2: SSH Setup
+
+ssh-keygen
+cd ~/.ssh
+ls -al
+
+---
+
+## Step 3: Install KOPS
+
+cd /usr/local/bin
+wget <kops-download-link>
+mv kops-linux-amd64 kops
+chmod 777 kops
+
+
+---
+
+## Step 4: Install kubectl
+
+chmod 777 kubectl
+
+---
+
+##Step 5: Verify Installation
+
+kops version
+kubectl version 
+---
+
+## Step 6: Environment Variables
+nano .bashrc add below
+export NAME=<dns-name>
+export KOPS_STATE_STORE=s3://<bucket-name>
+export AWS_REGION=<region>
+export CLUSTER_NAME=<cluster-name>
+export EDITOR=/usr/bin/nano
+
+source ~/.bashrc
+
+
+---
+
+##Step 7: Create Cluster
+
+kops create cluster \
+--name=$NAME \
+--state=$KOPS_STATE_STORE \
+--zones=<availability-zone> \
+--node-count=2 \
+--node-size=t2.medium \
+--master-size=t2.medium \
+--dns-zone=<dns-name>
+
+
+---
+
+##Step 8: Deploy Cluster
+
+kops update cluster --yes --admin
+kops validate cluster
+
+
+---
+
+##Step 9: Verify Cluster
+
+kubectl get nodes
+kubectl get nodes -o wide
+kubectl cluster-info
+kubectl get ns
+kubectl get pods -n kube-system
+
+
+---
+
+##Step 10: Pods Understanding
+
+* Pod = smallest unit in Kubernetes
+* Can contain multiple containers:
+
+  * Main container
+  * Sidecars (logs/proxy)
+
+---
+
+## Step 11: Imperative Way
+
+kubectl run testpod --image=nginx:latest --dry-run=client -o yaml
+
+
+---
+
+##Step 12: Declarative Way
+
+kubectl apply -f testpod.yaml
+
+
+---
+
+
