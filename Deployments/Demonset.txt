@@ -1,0 +1,19 @@
+Kubernetes DaemonSet – Understanding 
+While exploring Kubernetes, I learned an important concept that’s simple but extremely powerful: DaemonSet
+?? What is DaemonSet?
+A DaemonSet ensures that:
+-One pod runs on every node in the cluster
+-Automatically deploys pods across all nodes
+- When a new node is added ? pod is created automatically
+?? Why is it Important?
+In real-world systems, some tasks need to run on every single node, not just a few pods.
+That’s where DaemonSet comes in.
+?? Common Use Cases
+-Monitoring ? Collect metrics from each node
+-Logging ? Collect logs from every node
+-Node-level agents ? Security, networking, etc.
+?? Example Scenario
+-Suppose you want to run a log collector on every node:
+If your cluster has 3 nodes ? 3 pods
+If you add another node ? Kubernetes automatically creates 1 more pod
+No manual scaling required.

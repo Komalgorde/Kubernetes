@@ -1,0 +1,183 @@
+**StatefulSet**
+-Used for stateful applications (apps that need data persistence).
+??Examples:
+-Databases (DB)
+-MongoDB
+-Cassandra
+??Key Features:
+-Provides stable and persistent storage.
+-Each pod gets a unique identity (name).
+-Pod identity remains the same even after rescheduling.
+?? Advantages (General)
+-Scalability
+-Automation
+-Self-healing
+-Auto scaling & updates
+-Load balancing
+
+??Practical Example
+->Deploy 1 cluster with 3 worker nodes and 1 control plane
+
+->Create Deployment and copy 
+
+kubectl create deployment testpod \
+--image=kiran2361993/kubegame:v2 \
+--replicas=6 \
+--dry-run=client -o yaml
+
+??Run Pod
+kubectl run pod --image=nginx:latest
+
+??Check pods:
+kubectl get pods
+
+??apply copied yaml
+kubectl apply -f <file>.yaml
+
+??Then check:
+kubectl get pods
+
+??Labels & Annotations
+-Labels ? Key-value pairs (used for selection)
+-Annotations ? Extra metadata
+
+Example annotations:
+annotations:
+  info: "..."
+  email: "..."
+  owner: "..."
+
+?? Container Configuration Example
+containers:
+  - name: mysqldb
+    image: image name
+    env:
+      - name: DB_NAME
+        value: "mysqldb"
+        Environment Variables (DB Config)
+	env:
+	  - name: DB_PORT
+	    value: "3306"
+	  - name: DB_URL
+    	    value: "www.example.com"
+    	    
+#copy and paste into yaml file and apply the yaml file
+
+-kubectl apply -f <file>.yaml
+
+-Describe pod (to check env variables):
+kubectl describe pod <pod-name>
+
+->Get pods:
+kubectl get pods
+
+?? Access Pod & Check Env
+kubectl exec -it testpod -- /bin/bash
+
+??Inside container:
+env
+#You will see environment variables here
+
+??Exit:
+exit
+
+?? Expose Pod Using Service (SVC)
+->Check services:
+kubectl get svc
+
+??Expose deployment:
+kubectl expose deployment testpod \
+--name=svc1 \
+--port=8000 \
+--target-port=80 \
+--type=NodePort
+
+#Do the same for all the service you have
+
+??Networking Setup
+->Allow required ports in Security Group (SG)
+
+??Access using:
+Public IP / DNS
+NodePort (example):
+32501
+31058
+
+??Cleanup
+->Delete pod:
+kubectl delete pod <pod-name>
+
+??Delete deployment:
+kubectl delete deployment testpod
+
+?? Deployment Strategy (Rolling Update)
+->To check explanation:
+kubectl explain deployment.spec.strategy
+Add in YAML:
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 100%
+    maxUnavailable: 0
+    
+Rolling Update (Live Deployment Update)
+?? Initial Concept
+Multiple pods running: Version V1 need to gradualy update to v2
+
+Goal:
+#Perform live update without downtime
+
+?? Apply Deployment
+kubectl apply -f <file>.yaml
+
+->To Watch pods in real-time:
+watch kubectl get pods
+?? Update Deployment (V1 ? V2)
+
+Open another terminal / login again (e.g., EC2)
+Switch user:
+sudo su -
+->Edit deployment:
+kubectl edit deployment testpod
+Change image: v1 ? v2
+
+#In the first terminal, you will see pods updating gradually
+
+?? Important Concept
+Old version (V1) should not be deleted immediately
+First: Deploy V2
+Then:
+Gradually remove V1
+
+#Prevents application crash / downtime
+
+?? YAML Configuration for Safe Update
+Go to YAML file and add:
+spec:
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+#Meaning
+-minReadySeconds: 10
+-Pod must be ready for 10 seconds before considered available
+-maxSurge: 1
+-maxUnavailable: 0
+-No pod goes down ? Zero downtime
+
+?? Apply Changes Again
+kubectl apply -f <file>.yaml
+Check pods:
+kubectl get pods
+?? Rollback Scenario (V2 ? V1)
+Edit again:
+kubectl edit deployment testpod
+Change:
+v2 ? v1
+-> Kubernetes will again perform rolling update
+?? Behavior Observation
+Every ~10 seconds:
+One pod is created (new version)
+One pod is terminated (old version)
